@@ -6,13 +6,15 @@ from PySide2 import QtCore, QtWidgets, QtGui
 
 from nodedisplay import CentralDisplay
 from right_menu import RightMenu
-from util import Test, SessionData, TestDebugData, FramedGroup, DebuggerSettings
+from util import Test, SessionData, TestDebugData, FramedGroup
 from button_set import ButtonSet
 from messagebox import MessageBox
 from logparser import LogParser
 from startuppage import StartupPage
-from debsettings import SettingsHandler
 from internal_logger import getLogger
+from debsettings import SettingsEditor
+
+from static.stylesheets import MENU_BAR_STYLESHEET
 
 # TODO: enable running from file? (for docker users)
 # Add error dialog?
@@ -51,6 +53,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._curr_test_debug_data: t.Optional[TestDebugData] = None
 
         self._menu_bar = self.menuBar()
+        self._menu_bar.setStyleSheet(MENU_BAR_STYLESHEET)
         self._menu_bar.addAction('Main', self.show_main_page).setShortcut("Ctrl+T")
 
         self._tests_menus: t.Dict[str, QtWidgets.QMenu] = {
@@ -90,12 +93,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self._vertical_splitter = QtWidgets.QSplitter(QtCore.Qt.Vertical, self)
 
         # settings handler
-        self._settings_handler = SettingsHandler(DebuggerSettings(), self)
+        self._settings_editor = SettingsEditor(self)
         self._menu_bar.addAction('Settings', self.set_settings)
 
         self._message_box = MessageBox(self)
         self._display = CentralDisplay(self._session_data.node_ids, self)
-        self._right_menu = RightMenu(self._display, self._settings_handler.debugger_settings, self)
+        self._right_menu = RightMenu(self._display, self._settings_editor, self)
         self._button_set = ButtonSet(self)
 
         self._left_frame = FramedGroup(
@@ -219,7 +222,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.rerun()
         
         self.next_step()
-        self._timer.start(self._settings_handler.debugger_settings.next_step_delay)
+        self._timer.start(self._settings_editor.get_settings().next_step_delay)
 
     def stop(self):
         self._tests_menus['main'].setEnabled(True)
@@ -278,7 +281,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._central_layout.setCurrentIndex(1)
     
     def set_settings(self):
-        self._settings_handler.edit_settings()
+        self._settings_editor.edit()
     
     # def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         # TODO: doesn't work if focused on jsonviewer...

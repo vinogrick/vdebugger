@@ -2,10 +2,11 @@ from PySide2 import QtCore, QtWidgets, QtGui
 import typing as t
 from static.const import EventType, OnMouseEventColor
 from static.const import STATIC_PATH, EVENT_STEP_TO_ANIM_STEP_RATIO, ENVELOPE_STEPS_COUNT
-from util import DebuggerSettings, Event
+from util import Event
 from nodedisplay import CentralDisplay
 from jsonviewer import JsonViewer
 from internal_logger import getLogger
+from debsettings import SettingsEditor
 
 logger = getLogger('right_menu')
 
@@ -100,7 +101,7 @@ class DisplayedEvent(QtWidgets.QWidget):
 
 
 class DisplayedMsgSend(DisplayedEvent):
-    def __init__(self, event: Event, display: CentralDisplay, debugger_settings: DebuggerSettings, parent: t.Optional[QtWidgets.QWidget] = None) -> None:
+    def __init__(self, event: Event, display: CentralDisplay, settings_editor: SettingsEditor, parent: t.Optional[QtWidgets.QWidget] = None) -> None:
         DisplayedEvent.__init__(self, event, display, parent)
         caption = (
             f'{event.data["ts"]:.3f} | {event.data["src"]} --> {event.data["dst"]} | {event.data["msg"]["type"]}'
@@ -123,7 +124,7 @@ class DisplayedMsgSend(DisplayedEvent):
         
         self._timer = QtCore.QTimer()
         self._timer.timeout.connect(self.advance_envelope)
-        self._debugger_settings = debugger_settings
+        self._settings_editor = settings_editor
 
         # add msg to node info
         self._display.displayed_nodes[event.data['src']].add_sent_msg(event.data)
@@ -177,7 +178,7 @@ class DisplayedMsgSend(DisplayedEvent):
             self._envelope_positions[0][1]
         )
         self._display.scene().addItem(self._envelope)
-        self._timer.start(self._debugger_settings.next_step_delay / EVENT_STEP_TO_ANIM_STEP_RATIO)
+        self._timer.start(self._settings_editor.get_settings().next_step_delay / EVENT_STEP_TO_ANIM_STEP_RATIO)
     
     def remove_line(self):
         if self._line is None:
@@ -635,9 +636,9 @@ class DisplayedNodeConnect(DisplayedEvent):
 
 # TODO: rename to EventMenu
 class RightMenu(QtWidgets.QWidget):
-    def __init__(self, display: CentralDisplay, debug_settings: DebuggerSettings, parent: t.Optional[QtWidgets.QWidget] = None) -> None:
+    def __init__(self, display: CentralDisplay, settings_editor: SettingsEditor, parent: t.Optional[QtWidgets.QWidget] = None) -> None:
         QtWidgets.QWidget.__init__(self, parent)
-        self._debug_settings = debug_settings
+        self._settings_editor = settings_editor
         self._main_layout = QtWidgets.QVBoxLayout(self)
         self._events_scroll = QtWidgets.QScrollArea(self, widgetResizable=True)
         self._scroll_bar = self._events_scroll.verticalScrollBar()
@@ -679,7 +680,7 @@ class RightMenu(QtWidgets.QWidget):
         
         # TODO: reorder events as they are declared in .rs file
         if event.type == EventType.MESSAGE_SEND:
-            self._last_shown_event = DisplayedMsgSend(event, self._display, self._debug_settings, self._events_wgt)
+            self._last_shown_event = DisplayedMsgSend(event, self._display, self._settings_editor, self._events_wgt)
             self._event_stack.append(self._last_shown_event)
             self._events_layout.addWidget(
                 self._last_shown_event, alignment=QtCore.Qt.AlignTop

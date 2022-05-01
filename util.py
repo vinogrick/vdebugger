@@ -73,10 +73,15 @@ class TestDebugData:
 
 @dataclass
 class DebuggerSettings:
+    # FIXME: when finished set proper values
     next_step_delay: int = 200
 
     def as_dict(self):
         return asdict(self)
+    
+    @classmethod
+    def from_dict(cls, data: dict):
+        return cls(**data)
 
 
 class FramedGroup(QtWidgets.QFrame):

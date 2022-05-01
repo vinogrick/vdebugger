@@ -227,6 +227,7 @@ class CentralDisplay(QtWidgets.QGraphicsView):
 
     
     def clear(self):
+        self.hide_shown_node_info()
         self._scene.clear()
         self.displayed_nodes.clear()
 

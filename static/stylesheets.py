@@ -86,3 +86,27 @@ QPushButton:pressed {
     background-color: green;
 }
 '''
+
+SETTINGS_EDITOR_STYLESHEET = '''
+QPushButton {
+    border: 1px solid grey;
+    border-radius: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+QPushButton:hover {
+    background-color: grey;
+}
+QPushButton:pressed {
+    background-color: green;
+}
+'''
+
+MENU_BAR_STYLESHEET = '''
+QMenuBar::item:selected {
+    background-color: grey
+}
+QMenuBar::item:pressed {
+    background-color: green
+}
+'''

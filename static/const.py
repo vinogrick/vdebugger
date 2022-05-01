@@ -3,9 +3,14 @@ from pathlib import Path
 
 # CONSTANTS
 DEBUGGER_PATH = Path(__file__).parent.parent.resolve()
+SETTINGS_PATH = f'{DEBUGGER_PATH}/settings.json'
 STATIC_PATH = f'{DEBUGGER_PATH}/static'
+
 EVENT_STEP_TO_ANIM_STEP_RATIO = 5
 ENVELOPE_STEPS_COUNT = EVENT_STEP_TO_ANIM_STEP_RATIO - 1
+
+MIN_STEP_DELAY_MS = 10
+MAX_STEP_DELAY_MS = 2000
 
 # ENUMS
 class NodePlotRule(int, Enum):
