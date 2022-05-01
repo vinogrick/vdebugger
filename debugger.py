@@ -39,7 +39,7 @@ class VDebugger:  # remove class?
         main_window.resize(screen_size.width() // 2, screen_size.height() // 2)
         main_window.showMaximized()
         
-        main_window.setFixedSize(main_window.size())
+        # main_window.setFixedSize(main_window.size())  # makes window nonresizable
         # main_window.show()
         logger.info(f'Debugger exited with status: {app.exec_()}')
 
@@ -280,14 +280,14 @@ class MainWindow(QtWidgets.QMainWindow):
     def set_settings(self):
         self._settings_handler.edit_settings()
     
-    def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
+    # def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
         # TODO: doesn't work if focused on jsonviewer...
-        if event.key() in [QtCore.Qt.Key_Space, QtCore.Qt.Key_S]:
-            if self._timer.isActive():
-                self.stop()
-            else:
-                self.run()
-        return super().keyPressEvent(event)
+        # if event.key() in [QtCore.Qt.Key_Space, QtCore.Qt.Key_S]:
+        #     if self._timer.isActive():
+        #         self.stop()
+        #     else:
+        #         self.run()
+        # return super().keyPressEvent(event)
 
 
 # TODO: would be great implement this (mb in dslib through rust)

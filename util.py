@@ -87,7 +87,6 @@ class FramedGroup(QtWidgets.QFrame):
             parent: QtWidgets.QWidget = None
     ):
         QtWidgets.QFrame.__init__(self, parent)
-        # self.setStyleSheet('FramedGroup{ border: 2px solid green }')
 
         self.setLayout(layout_cls(self))
         self.widgets: t.Dict[str, QtWidgets.QWidget] = {}

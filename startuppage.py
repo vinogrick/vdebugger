@@ -4,11 +4,14 @@ from PySide2 import QtCore, QtWidgets, QtGui
 from PySide2.QtCharts import QtCharts
 from util import Test, SessionData
 
+from static.stylesheets import STARTUP_PAGE_STYLESHEET
+
 class TestsView(QtWidgets.QWidget):
     def __init__(self, status: str, parent: t.Optional[QtWidgets.QWidget] = None) -> None:
         QtWidgets.QWidget.__init__(self, parent)
 
         self._scroll_area = QtWidgets.QScrollArea(self, widgetResizable=True)
+        self._scroll_area.setObjectName(status)
         self._scroll_wgt = QtWidgets.QWidget(self)
         self._scroll_layout = QtWidgets.QVBoxLayout(self._scroll_wgt)
         self._scroll_area.setWidget(self._scroll_wgt)
@@ -27,6 +30,7 @@ class TestsView(QtWidgets.QWidget):
         if test.name in self._tests:
             return
         self._tests[test.name] = QtWidgets.QPushButton(test.name, self._scroll_wgt)
+        self._tests[test.name].setObjectName(self._main_lbl.text())  # for stylesheet
         self._tests[test.name].clicked.connect(callback)
         self._scroll_layout.addWidget(self._tests[test.name])
 
@@ -80,6 +84,8 @@ class StartupPage(QtWidgets.QWidget):
         self._main_layout.addWidget(self._chartview, 2)
         self._main_layout.addWidget(self._tests_area, 1)
         self.setLayout(self._main_layout)
+
+        self.setStyleSheet(STARTUP_PAGE_STYLESHEET)
     
     # def show_slice(self, slice: QtCharts.QPieSlice, is_hovered: bool):
     #     slice.setLabelVisible(is_hovered)

@@ -107,7 +107,7 @@ class DisplayedMsgSend(DisplayedEvent):
         )
         self._main_lbl.setText(caption)
 
-        self._msg_viewer = JsonViewer(event.data['msg']['data'], "Message data", self)
+        self._msg_viewer = JsonViewer(event.data['msg']['data'], "Message data", self, expanded_h_ratio=3)
         self._main_layout.addWidget(self._msg_viewer, *DISPLAYED_EVENT_GRID[1])
 
         self._line: t.Optional[QtWidgets.QGraphicsLineItem] = None
@@ -124,6 +124,9 @@ class DisplayedMsgSend(DisplayedEvent):
         self._timer = QtCore.QTimer()
         self._timer.timeout.connect(self.advance_envelope)
         self._debugger_settings = debugger_settings
+
+        # add msg to node info
+        self._display.displayed_nodes[event.data['src']].add_sent_msg(event.data)
     
     def _show(self):
         self.draw_line()
@@ -232,11 +235,14 @@ class DisplayedMsgRcv(DisplayedEvent):
         )
         self._main_lbl.setText(caption)
 
-        self._msg_viewer = JsonViewer(event.data['msg']['data'], "Message data", self)
+        self._msg_viewer = JsonViewer(event.data['msg']['data'], "Message data", self, expanded_h_ratio=3)
         self._main_layout.addWidget(self._msg_viewer, *DISPLAYED_EVENT_GRID[1])
 
         self._line: t.Optional[QtWidgets.QGraphicsLineItem] = None
         self._color: str = OnMouseEventColor.MESSAGE_RECEIVE
+
+        # add msg to node info
+        self._display.displayed_nodes[event.data['dst']].add_received_msg(event.data)
     
     def _show(self):
         self.draw_line()
@@ -301,7 +307,7 @@ class DisplayedMsgLocal(DisplayedEvent):
         )
         self._main_lbl.setText(caption)
 
-        self._msg_viewer = JsonViewer(event.data['msg']['data'], "Message data", self)
+        self._msg_viewer = JsonViewer(event.data['msg']['data'], "Message data", self, expanded_h_ratio=3)
         self._main_layout.addWidget(self._msg_viewer, *DISPLAYED_EVENT_GRID[1])
 
         self._color: str = OnMouseEventColor.LOCAL_MESSAGE
@@ -325,7 +331,7 @@ class DisplayedMsgDrop(DisplayedEvent):
         )
         self._main_lbl.setText(caption)
 
-        self._msg_viewer = JsonViewer(event.data['msg']['data'], "Message data", self)
+        self._msg_viewer = JsonViewer(event.data['msg']['data'], "Message data", self, expanded_h_ratio=3)
         self._main_layout.addWidget(self._msg_viewer, *DISPLAYED_EVENT_GRID[1])
 
         node_icon_size = self._display.get_node_icon_size()
@@ -425,7 +431,7 @@ class DisplayedMsgDiscard(DisplayedEvent):
         )
         self._main_lbl.setText(caption)
 
-        self._msg_viewer = JsonViewer(event.data['msg']['data'], "Message data", self)
+        self._msg_viewer = JsonViewer(event.data['msg']['data'], "Message data", self, expanded_h_ratio=3)
         self._main_layout.addWidget(self._msg_viewer, *DISPLAYED_EVENT_GRID[1])
 
         node_icon_size = self._display.get_node_icon_size()
@@ -522,7 +528,7 @@ class DisplayedTimerFired(DisplayedEvent):
         )
         self._main_lbl.setText(caption)
 
-        self._msg_viewer = JsonViewer({'name': event.data['name']}, "Message data", self, True)
+        self._msg_viewer = JsonViewer({'name': event.data['name']}, "Message data", self, True, expanded_h_ratio=3)
         self._main_layout.addWidget(self._msg_viewer, *DISPLAYED_EVENT_GRID[1])
 
         self._color: str = OnMouseEventColor.TIMER_FIRED
@@ -544,7 +550,7 @@ class DisplayedNodeCrash(DisplayedEvent):
         )
         self._main_lbl.setText(caption)
 
-        self._msg_viewer = JsonViewer(None, "Message data", self, True)
+        self._msg_viewer = JsonViewer(None, "Message data", self, True, expanded_h_ratio=3)
         self._main_layout.addWidget(self._msg_viewer, *DISPLAYED_EVENT_GRID[1])
 
         self._color: str = OnMouseEventColor.NODE_CRASHED
@@ -564,7 +570,7 @@ class DisplayedNodeRecover(DisplayedEvent):
         )
         self._main_lbl.setText(caption)
 
-        self._msg_viewer = JsonViewer(None, "Message data", self, True)
+        self._msg_viewer = JsonViewer(None, "Message data", self, True, expanded_h_ratio=3)
         self._main_layout.addWidget(self._msg_viewer, *DISPLAYED_EVENT_GRID[1])
 
         self._color: str = OnMouseEventColor.NODE_RECOVERED
@@ -584,7 +590,7 @@ class DisplayedNodeDisconnect(DisplayedEvent):
         )
         self._main_lbl.setText(caption)
 
-        self._msg_viewer = JsonViewer(None, "Message data", self, True)
+        self._msg_viewer = JsonViewer(None, "Message data", self, True, expanded_h_ratio=3)
         self._main_layout.addWidget(self._msg_viewer, *DISPLAYED_EVENT_GRID[1])
 
         self._color: str = OnMouseEventColor.NODE_DISCONNECTED
@@ -607,7 +613,7 @@ class DisplayedNodeConnect(DisplayedEvent):
         self._main_lbl.setText(caption)
         self._main_layout.addWidget(self._main_lbl, *DISPLAYED_EVENT_GRID[0])
 
-        self._msg_viewer = JsonViewer(None, "Message data", self, True)
+        self._msg_viewer = JsonViewer(None, "Message data", self, True, expanded_h_ratio=3)
         self._main_layout.addWidget(self._msg_viewer, *DISPLAYED_EVENT_GRID[1])
 
         self._color: str = OnMouseEventColor.NODE_DISCONNECTED
@@ -634,9 +640,9 @@ class RightMenu(QtWidgets.QWidget):
         self._debug_settings = debug_settings
         self._main_layout = QtWidgets.QVBoxLayout(self)
         self._events_scroll = QtWidgets.QScrollArea(self, widgetResizable=True)
-        # autoscroll down when event is added
-        scroll_bar = self._events_scroll.verticalScrollBar()
-        scroll_bar.rangeChanged.connect(lambda: scroll_bar.setValue(scroll_bar.maximum()))
+        self._scroll_bar = self._events_scroll.verticalScrollBar()
+        self._force_prevent_scrolling = True
+        self._scroll_bar.rangeChanged.connect(self.scroll_events_down)  # auto scroll when content changes
         # self._events_scroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
         # self._events_scroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self._events_wgt = QtWidgets.QWidget(self)
@@ -657,7 +663,7 @@ class RightMenu(QtWidgets.QWidget):
         self._event_stack: t.List[DisplayedEvent] = []
     
     def next_event(self, event: Event):
-        # TODO: reorder events as they are declared in .rs file
+        self._force_prevent_scrolling = False
 
         if self._last_shown_event is not None:
             # hide prev step event
@@ -668,8 +674,10 @@ class RightMenu(QtWidgets.QWidget):
             # n+1 emitted event to remove last shown event
             self.hide_all_events()
             # TODO: not hide node events?
+            self._force_prevent_scrolling = True
             return
         
+        # TODO: reorder events as they are declared in .rs file
         if event.type == EventType.MESSAGE_SEND:
             self._last_shown_event = DisplayedMsgSend(event, self._display, self._debug_settings, self._events_wgt)
             self._event_stack.append(self._last_shown_event)
@@ -772,14 +780,23 @@ class RightMenu(QtWidgets.QWidget):
         # 1. process removing current event
         curr_displayed_event._hide()
         if curr_event.type == EventType.MESSAGE_SEND:
+            self._display.displayed_nodes[curr_event.data['src']].pop_sent_msg()
             curr_displayed_event.deleteLater()
 
         elif curr_event.type == EventType.MESSAGE_RECEIVE:
+            self._display.displayed_nodes[curr_event.data['dst']].pop_received_msg()
             curr_displayed_event.deleteLater()
         
         # 2. process showing prev_event
         if prev_event.type == EventType.MESSAGE_SEND:
             prev_displayed_event.show()
+    
+    def scroll_events_down(self):
+        if self._force_prevent_scrolling:
+            # to prevent scrolling when expanding msg info viewer
+            return
+        self._force_prevent_scrolling = True
+        self._scroll_bar.setValue(self._scroll_bar.maximum())
     
     def clear_events(self):
         self._last_shown_event = None

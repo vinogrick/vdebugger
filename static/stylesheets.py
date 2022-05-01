@@ -1,0 +1,88 @@
+from pathlib import Path
+
+curr_folder = Path(__file__).parent.resolve()
+
+JSON_VIEWER_STYLESHEET = '''
+QTreeWidget {
+    border: 3px solid black;
+    border-radius: 10px;
+    background-color: white;
+    color: black;
+}
+
+QTreeWidget::branch:has-siblings:!adjoins-item {
+    border-image: url(%(vline)s) 0;
+}
+
+QTreeWidget::branch:has-siblings:adjoins-item {
+    border-image: url(%(branch_more)s) 0;
+}
+
+QTreeWidget::branch:!has-siblings:adjoins-item {
+    border-image: url(%(branch_end)s) 0;
+}
+''' % {
+    'vline': f'{curr_folder}/pics/vline.png',
+    'branch_more': f'{curr_folder}/pics/branch-more.png',
+    'branch_end': f'{curr_folder}/pics/branch-end.png',
+}
+
+STARTUP_PAGE_STYLESHEET = '''
+QPushButton {
+    border: 1px solid grey;
+    border-radius: 10px;
+    color: black;
+}
+QPushButton:hover {
+    background-color: grey;
+}
+QPushButton:pressed#PASSED {
+    background-color: green;
+}
+QPushButton:pressed#FAILED {
+    background-color: red;
+}
+
+QScrollArea#PASSED {
+    border: 3px solid green;
+    border-radius: 3px;
+}
+QScrollArea#FAILED {
+    border: 3px solid red;
+    border-radius: 3px;
+}
+
+QScrollBar:vertical {
+    background: white;
+}
+QScrollBar::handle:vertical {         
+    border: 0px solid black;
+    border-radius: 5px;
+    background-color: grey;
+}
+QScrollBar::add-line:vertical {       
+    height: 0px;
+    subcontrol-position: bottom;
+    subcontrol-origin: margin;
+}
+QScrollBar::sub-line:vertical {
+    height: 0px;
+    subcontrol-position: top;
+    subcontrol-origin: margin;
+}
+'''
+
+BUTTON_SET_STYLESHEET = '''
+QPushButton {
+    border: 1px solid grey;
+    border-radius: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+QPushButton:hover {
+    background-color: grey;
+}
+QPushButton:pressed {
+    background-color: green;
+}
+'''

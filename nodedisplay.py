@@ -20,7 +20,7 @@ class DisplayedNode(QtWidgets.QGraphicsItemGroup):
     LOCAL_USER_PATH = f"{STATIC_PATH}/pics/localuser.png"
     TIMER_PATH = f"{STATIC_PATH}/pics/timer.png"
 
-    def __init__(self, node_id: str, size: t.Tuple[int, int], display: CentralDisplay, parent: QtWidgets.QWidget):
+    def __init__(self, node_id: str, size: t.Tuple[int, int], display: CentralDisplay, parent: t.Optional[QtWidgets.QGraphicsItem] = None):
         QtWidgets.QGraphicsItemGroup.__init__(self, parent)
         self._id = node_id
         self._node_size = size
@@ -62,30 +62,34 @@ class DisplayedNode(QtWidgets.QGraphicsItemGroup):
         self.addToGroup(self._timer)
 
         self._node_info = {
-            'messages_in': [],
-            'messages_out': [],
+            'msgs_sent': [],
+            'msgs_received': [],
             'timers_fired': []
         }
-        self._info_viewer = JsonViewer(self._node_info, "Node info", self)
-        self._info_viewer.hide()
+        self._info_viewer = JsonViewer(
+            self._node_info, 
+            f"Node '{node_id}' info", 
+            self._display, 
+            expanded_w_ratio=2,
+            expanded_h_ratio=4)
 
         self.setFlag(QtWidgets.QGraphicsItem.ItemIsMovable)
         self.setFlag(QtWidgets.QGraphicsItem.ItemIsSelectable)
-        # self.setFlag(QtWidgets.QGraphicsItem.ItemSendsGeometryChanges)
 
         self._connections_counter = 0  # for lines, that represent events (disables movement)
         self._border_show_counter = 0  # border can be really hidden only when this counter = 0
         self._local_user_show_counter = 0  # same as border counter for local user
         self._cross_show_counter = 0
         self._timer_show_counter = 0
+        self._info_viewer_show_counter = 0
         
     def update_conn_counter(self, val: int):
         assert val in [-1, 1]  # TODO: remove this?
         was_zero = (self._connections_counter == 0)
         self._connections_counter += val
         if self._connections_counter < 0:
+            logger.error(f'Something went wrong: connections for {self._id} = {self._connections_counter}')
             self._connections_counter = 0
-            logger.error('Something went wrong')
             return
         if self._connections_counter == 0:
             self.setFlags(self.flags() | QtWidgets.QGraphicsItem.ItemIsMovable)
@@ -144,21 +148,59 @@ class DisplayedNode(QtWidgets.QGraphicsItemGroup):
         if self._timer_show_counter == 0:
             self._timer.hide()
     
-    def hoverEnterEvent(self, event: QtWidgets.QGraphicsSceneHoverEvent) -> None:
-        
-        return super().hoverEnterEvent(event)
+    def show_info(self):
+        if self._info_viewer_show_counter == 0:
+            self._display.hide_shown_node_info()
+            self._display.set_node_with_shown_info(self._id)
+            self._info_viewer.show()
+        self._info_viewer_show_counter += 1
 
-    # def mousePressEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
-    #     self.show_border()
-    #     return super().mousePressEvent(event)
+    def hide_info(self):
+        self._info_viewer_show_counter = (
+            0 if self._info_viewer_show_counter == 0
+            else self._info_viewer_show_counter - 1
+        )
+        if self._info_viewer_show_counter == 0:
+            self._display.set_node_with_shown_info(None)
+            self._info_viewer.hide()
+    
+    def is_info_shown(self):
+        return self._info_viewer_show_counter > 0
+    
+    def add_received_msg(self, msg: dict):
+        self._node_info['msgs_received'].append(msg)
+        self._info_viewer.reset_value(self._node_info)
+    
+    def pop_received_msg(self):
+        poped_msg =  self._node_info['msgs_received'].pop()
+        self._info_viewer.reset_value(self._node_info)
+        return poped_msg
 
-    # def mouseReleaseEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
-    #     self.hide_border()
-    #     return super().mouseReleaseEvent(event)
+    def add_sent_msg(self, msg: dict):
+        self._node_info['msgs_sent'].append(msg)
+        self._info_viewer.reset_value(self._node_info)
+    
+    def pop_sent_msg(self):
+        poped_msg = self._node_info['msgs_sent'].pop()
+        self._info_viewer.reset_value(self._node_info)
+        return poped_msg
 
-# class MyGraphicsScene(QtWidgets.QGraphicsScene):
-#     def __init__(self) -> None:
-#         QtWidgets.QGraphicsScene.__init__(self)
+
+
+class CustomGraphicsScene(QtWidgets.QGraphicsScene):
+    def __init__(self, parent: t.Optional[QtCore.QObject] = None) -> None:
+        super().__init__(parent=parent)
+    
+    def mouseReleaseEvent(self, event: QtWidgets.QGraphicsSceneMouseEvent) -> None:
+        if event.button() == QtCore.Qt.RightButton:
+            items = self.items(event.scenePos())
+            for item in items:
+                if isinstance(item, DisplayedNode):
+                    if item.is_info_shown():
+                        item.hide_info()
+                    else:
+                        item.show_info()
+        return super().mouseReleaseEvent(event)
 
 
 class CentralDisplay(QtWidgets.QGraphicsView):
@@ -171,7 +213,7 @@ class CentralDisplay(QtWidgets.QGraphicsView):
         
         self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
 
-        self._scene = QtWidgets.QGraphicsScene()
+        self._scene = CustomGraphicsScene()
         # rect = self.contentsRect()
         self._scene.setParent(self)
         # self._scene.setBackgroundBrush(QtCore.Qt.green)
@@ -181,6 +223,7 @@ class CentralDisplay(QtWidgets.QGraphicsView):
         self._node_ids = node_ids
         self.displayed_nodes: t.Dict[str, DisplayedNode] = {}
         self._node_icon_size: t.Optional[t.Tuple[int, int]] = None
+        self._node_with_shown_info: t.Optional[str] = None
 
     
     def clear(self):
@@ -221,6 +264,15 @@ class CentralDisplay(QtWidgets.QGraphicsView):
                 self.scale(1/1.2, 1/1.2)
         else:
             super().wheelEvent(event)
+    
+    def hide_shown_node_info(self):
+        if self._node_with_shown_info is None:
+            return
+        self.displayed_nodes[self._node_with_shown_info].hide_info()
+        self._node_with_shown_info = None
+    
+    def set_node_with_shown_info(self, node_id: str):
+        self._node_with_shown_info = node_id
         
     ##### HELPERS ###
     def calc_node_positions(self, plot_rule: NodePlotRule = NodePlotRule.CIRCLE) -> t.List[t.Tuple[int, int]]:

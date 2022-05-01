@@ -1,12 +1,13 @@
 from enum import Enum
 from pathlib import Path
 
+# CONSTANTS
 DEBUGGER_PATH = Path(__file__).parent.parent.resolve()
 STATIC_PATH = f'{DEBUGGER_PATH}/static'
 EVENT_STEP_TO_ANIM_STEP_RATIO = 5
 ENVELOPE_STEPS_COUNT = EVENT_STEP_TO_ANIM_STEP_RATIO - 1
 
-
+# ENUMS
 class NodePlotRule(int, Enum):
     CIRCLE = 0
     ROW = 1
@@ -30,7 +31,6 @@ class EventType(str, Enum):
     LINK_DISABLED = 'LinkDisabled'
     NETWORK_PARTITION = 'NetworkPartition'
 
-
 class MsgBoxColors(str, Enum):
     GREEN = 'green'
     YELLOW = '#F98800'
@@ -46,4 +46,3 @@ class OnMouseEventColor(str, Enum):
     NODE_RECOVERED = 'green'
     NODE_DISCONNECTED = 'yellow'
     NODE_CONNECTED = 'green'
-
