@@ -3,7 +3,7 @@ import datetime
 
 from PySide2 import QtCore, QtWidgets
 
-from static.const import MsgBoxColors
+from components.static.const import MsgBoxColors
 
 
 class MessageBox(QtWidgets.QWidget):

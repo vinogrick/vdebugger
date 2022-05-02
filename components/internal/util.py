@@ -1,9 +1,21 @@
 import json
 import typing as t
 from dataclasses import dataclass, asdict
-from static.const import EventType
 from PySide2 import QtWidgets
 
+from components.static.const import EventType
+
+@dataclass
+class Serializable:
+    def serialize(self):
+        return asdict(self)
+    
+    @classmethod
+    def deserialize(cls, data: t.Dict[t.Any, t.Any]):
+        return cls(**data)
+    
+    def __str__(self):
+        return json.dumps(self.serialize(), indent=2)
 
 @dataclass
 class Event:
@@ -72,16 +84,9 @@ class TestDebugData:
 
 
 @dataclass
-class DebuggerSettings:
+class DebuggerSettings(Serializable):
     # FIXME: when finished set proper values
     next_step_delay: int = 200
-
-    def as_dict(self):
-        return asdict(self)
-    
-    @classmethod
-    def from_dict(cls, data: dict):
-        return cls(**data)
 
 
 class FramedGroup(QtWidgets.QFrame):

@@ -1,12 +1,15 @@
 from PySide2 import QtCore, QtWidgets, QtGui
 import typing as t
-from static.const import EventType, OnMouseEventColor
-from static.const import STATIC_PATH, EVENT_STEP_TO_ANIM_STEP_RATIO, ENVELOPE_STEPS_COUNT
-from util import Event
-from nodedisplay import CentralDisplay
-from jsonviewer import JsonViewer
-from internal_logger import getLogger
-from debsettings import SettingsEditor
+
+from components.internal.util import Event
+from components.internal.internal_logger import getLogger
+
+from components.static.const import EventType, OnMouseEventColor
+from components.static.const import STATIC_PATH, EVENT_STEP_TO_ANIM_STEP_RATIO, ENVELOPE_STEPS_COUNT
+
+from components.visible.debsettings import SettingsEditor
+from components.visible.jsonviewer import JsonViewer
+from components.visible.nodedisplay import CentralDisplay
 
 logger = getLogger('right_menu')
 
@@ -305,7 +308,7 @@ class DisplayedMsgLocal(DisplayedEvent):
         DisplayedEvent.__init__(self, event, display, parent)
         caption = (
             f'{event.data["ts"]:.3f} | {event.data["dst"]} >>> local | {event.data["msg"]["type"]}'
-        )
+        )  # FIXME: class is used for rcv and send, but arrows are not the same (>>>)?
         self._main_lbl.setText(caption)
 
         self._msg_viewer = JsonViewer(event.data['msg']['data'], "Message data", self, expanded_h_ratio=3)
@@ -525,7 +528,7 @@ class DisplayedTimerFired(DisplayedEvent):
     def __init__(self, event: Event, display: CentralDisplay, parent: t.Optional[QtWidgets.QWidget] = None) -> None:
         DisplayedEvent.__init__(self, event, display, parent)
         caption = (
-            f'{event.data["ts"]:.3f} | {event.data["dst"]} !-- timer'
+            f'{event.data["ts"]:.3f} | {event.data["node"]} !-- timer'
         )
         self._main_lbl.setText(caption)
 
@@ -535,12 +538,12 @@ class DisplayedTimerFired(DisplayedEvent):
         self._color: str = OnMouseEventColor.TIMER_FIRED
 
     def _show(self):
-        self._display.displayed_nodes[self._event.data['dst']].show_border()
-        self._display.displayed_nodes[self._event.data['dst']].show_timer()
+        self._display.displayed_nodes[self._event.data['node']].show_border()
+        self._display.displayed_nodes[self._event.data['node']].show_timer()
 
     def _hide(self):
-        self._display.displayed_nodes[self._event.data['dst']].hide_border()
-        self._display.displayed_nodes[self._event.data['dst']].show_timer()
+        self._display.displayed_nodes[self._event.data['node']].hide_border()
+        self._display.displayed_nodes[self._event.data['node']].show_timer()
     
 
 class DisplayedNodeCrash(DisplayedEvent):

@@ -2,9 +2,10 @@ from PySide2 import QtCore, QtWidgets, QtGui
 import typing as t
 import json
 
-from util import DebuggerSettings
-from static.const import SETTINGS_PATH, MIN_STEP_DELAY_MS, MAX_STEP_DELAY_MS
-from static.stylesheets import SETTINGS_EDITOR_STYLESHEET
+from components.static.const import SETTINGS_PATH, MIN_STEP_DELAY_MS, MAX_STEP_DELAY_MS
+from components.static.stylesheets import SETTINGS_EDITOR_STYLESHEET
+
+from components.internal.util import DebuggerSettings
 
 class SettingsEditor(QtWidgets.QWidget):
     def __init__(self, parent: t.Optional[QtWidgets.QWidget] = None) -> None:
@@ -12,7 +13,7 @@ class SettingsEditor(QtWidgets.QWidget):
         self.setWindowTitle('Debugger settings')
 
         with open(SETTINGS_PATH, 'rt') as settings_file:
-            self._settings = DebuggerSettings.from_dict(json.load(settings_file))
+            self._settings = DebuggerSettings.deserialize(json.load(settings_file))
         self._parent = parent
 
         self._main_layout = QtWidgets.QVBoxLayout(self)
@@ -55,7 +56,7 @@ class SettingsEditor(QtWidgets.QWidget):
     def save(self):
         self._settings.next_step_delay = self._next_step_delay_slider.value()
         with open(SETTINGS_PATH, 'wt') as settings_file:
-            json.dump(self._settings.as_dict(), settings_file, indent=2)
+            json.dump(self._settings.serialize(), settings_file, indent=2)
         self.hide()
     
     def edit(self):

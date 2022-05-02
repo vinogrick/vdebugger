@@ -1,6 +1,4 @@
-from pathlib import Path
-
-curr_folder = Path(__file__).parent.resolve()
+from components.static.const import PICS_PATH
 
 JSON_VIEWER_STYLESHEET = '''
 QTreeWidget {
@@ -22,9 +20,9 @@ QTreeWidget::branch:!has-siblings:adjoins-item {
     border-image: url(%(branch_end)s) 0;
 }
 ''' % {
-    'vline': f'{curr_folder}/pics/vline.png',
-    'branch_more': f'{curr_folder}/pics/branch-more.png',
-    'branch_end': f'{curr_folder}/pics/branch-end.png',
+    'vline': f'{PICS_PATH}/vline.png',
+    'branch_more': f'{PICS_PATH}/branch-more.png',
+    'branch_end': f'{PICS_PATH}/branch-end.png',
 }
 
 STARTUP_PAGE_STYLESHEET = '''
@@ -108,5 +106,12 @@ QMenuBar::item:selected {
 }
 QMenuBar::item:pressed {
     background-color: green
+}
+'''
+
+NODE_INFO_DISPLAY_STYLESHEET = '''
+QComboBox {
+    border: 1px solid black;
+    border-radius: 4px;
 }
 '''

@@ -2,9 +2,10 @@ from enum import Enum
 from pathlib import Path
 
 # CONSTANTS
-DEBUGGER_PATH = Path(__file__).parent.parent.resolve()
-SETTINGS_PATH = f'{DEBUGGER_PATH}/settings.json'
-STATIC_PATH = f'{DEBUGGER_PATH}/static'
+DEBUGGER_PATH = Path(__file__).parent.parent.parent.resolve()
+STATIC_PATH = f'{DEBUGGER_PATH}/components/static'
+PICS_PATH = f'{STATIC_PATH}/pics'
+SETTINGS_PATH = f'{STATIC_PATH}/settings.json'
 
 EVENT_STEP_TO_ANIM_STEP_RATIO = 5
 ENVELOPE_STEPS_COUNT = EVENT_STEP_TO_ANIM_STEP_RATIO - 1

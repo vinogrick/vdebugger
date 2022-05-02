@@ -2,7 +2,7 @@ import typing as t
 
 from PySide2 import QtCore, QtWidgets, QtGui
 
-from static.stylesheets import BUTTON_SET_STYLESHEET
+from components.static.stylesheets import BUTTON_SET_STYLESHEET
 
 class ButtonSet(QtWidgets.QWidget):
     def __init__(self, parent: t.Optional[QtWidgets.QWidget] = None) -> None:

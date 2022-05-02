@@ -2,10 +2,12 @@ from PySide2 import QtCore, QtWidgets, QtGui
 import math
 import typing as t
 
-from internal_logger import getLogger
-from jsonviewer import JsonViewer
-from static.const import STATIC_PATH, NodePlotRule
-from static.const import OnMouseEventColor
+from components.visible.node_info_display import NodeInfoDisplay
+
+from components.internal.internal_logger import getLogger
+
+from components.static.const import STATIC_PATH, NodePlotRule
+from components.static.const import OnMouseEventColor
 
 logger = getLogger('nodedisplay')
 
@@ -60,18 +62,8 @@ class DisplayedNode(QtWidgets.QGraphicsItemGroup):
         self._timer.setPos(size[0], -pixmap.height())
         self._timer.hide()
         self.addToGroup(self._timer)
-
-        self._node_info = {
-            'msgs_sent': [],
-            'msgs_received': [],
-            'timers_fired': []
-        }
-        self._info_viewer = JsonViewer(
-            self._node_info, 
-            f"Node '{node_id}' info", 
-            self._display, 
-            expanded_w_ratio=2,
-            expanded_h_ratio=4)
+        
+        self._info_viewer = NodeInfoDisplay(self._id, self._display)
 
         self.setFlag(QtWidgets.QGraphicsItem.ItemIsMovable)
         self.setFlag(QtWidgets.QGraphicsItem.ItemIsSelectable)
@@ -81,7 +73,6 @@ class DisplayedNode(QtWidgets.QGraphicsItemGroup):
         self._local_user_show_counter = 0  # same as border counter for local user
         self._cross_show_counter = 0
         self._timer_show_counter = 0
-        self._info_viewer_show_counter = 0
         
     def update_conn_counter(self, val: int):
         assert val in [-1, 1]  # TODO: remove this?
@@ -149,42 +140,28 @@ class DisplayedNode(QtWidgets.QGraphicsItemGroup):
             self._timer.hide()
     
     def show_info(self):
-        if self._info_viewer_show_counter == 0:
-            self._display.hide_shown_node_info()
-            self._display.set_node_with_shown_info(self._id)
-            self._info_viewer.show()
-        self._info_viewer_show_counter += 1
-
+        self._display.hide_shown_node_info()
+        self._display.set_node_with_shown_info(self._id)
+        self._info_viewer.show()
+    
     def hide_info(self):
-        self._info_viewer_show_counter = (
-            0 if self._info_viewer_show_counter == 0
-            else self._info_viewer_show_counter - 1
-        )
-        if self._info_viewer_show_counter == 0:
-            self._display.set_node_with_shown_info(None)
-            self._info_viewer.hide()
+        self._display.set_node_with_shown_info(None)
+        self._info_viewer.hide()
     
     def is_info_shown(self):
-        return self._info_viewer_show_counter > 0
+        return not self._info_viewer.isHidden()
     
     def add_received_msg(self, msg: dict):
-        self._node_info['msgs_received'].append(msg)
-        self._info_viewer.reset_value(self._node_info)
-    
+        self._info_viewer.add_received_msg(msg)
+
     def pop_received_msg(self):
-        poped_msg =  self._node_info['msgs_received'].pop()
-        self._info_viewer.reset_value(self._node_info)
-        return poped_msg
+        raise NotImplementedError()
 
     def add_sent_msg(self, msg: dict):
-        self._node_info['msgs_sent'].append(msg)
-        self._info_viewer.reset_value(self._node_info)
+        self._info_viewer.add_sent_msg(msg)
     
     def pop_sent_msg(self):
-        poped_msg = self._node_info['msgs_sent'].pop()
-        self._info_viewer.reset_value(self._node_info)
-        return poped_msg
-
+        raise NotImplementedError()
 
 
 class CustomGraphicsScene(QtWidgets.QGraphicsScene):

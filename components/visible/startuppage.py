@@ -2,9 +2,10 @@ import typing as t
 
 from PySide2 import QtCore, QtWidgets, QtGui
 from PySide2.QtCharts import QtCharts
-from util import Test, SessionData
 
-from static.stylesheets import STARTUP_PAGE_STYLESHEET
+from components.internal.util import Test, SessionData
+
+from components.static.stylesheets import STARTUP_PAGE_STYLESHEET
 
 class TestsView(QtWidgets.QWidget):
     def __init__(self, status: str, parent: t.Optional[QtWidgets.QWidget] = None) -> None:

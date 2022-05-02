@@ -4,17 +4,18 @@ import typing as t
 
 from PySide2 import QtCore, QtWidgets, QtGui
 
-from nodedisplay import CentralDisplay
-from right_menu import RightMenu
-from util import Test, SessionData, TestDebugData, FramedGroup
-from button_set import ButtonSet
-from messagebox import MessageBox
-from logparser import LogParser
-from startuppage import StartupPage
-from internal_logger import getLogger
-from debsettings import SettingsEditor
+from components.visible.button_set import ButtonSet
+from components.visible.debsettings import SettingsEditor
+from components.visible.messagebox import MessageBox
+from components.visible.nodedisplay import CentralDisplay
+from components.visible.right_menu import RightMenu
+from components.visible.startuppage import StartupPage
 
-from static.stylesheets import MENU_BAR_STYLESHEET
+from components.internal.internal_logger import getLogger
+from components.internal.logparser import LogParser
+from components.internal.util import Test, SessionData, TestDebugData, FramedGroup
+
+from components.static.stylesheets import MENU_BAR_STYLESHEET
 
 # TODO: enable running from file? (for docker users)
 # Add error dialog?
@@ -67,7 +68,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # add submenus by status
         for status in [Test.Status.PASSED, Test.Status.FAILED]:
             self._tests_menus[status] = self._tests_menus['main'].addMenu(status)
-            self._tests_menus[status].setStyleSheet("menu-scrollable: 1;")
+            self._tests_menus[status].setStyleSheet("menu-scrollable: 1;")  # FIXME: no scrollbar...
             self._tests_menus[status].setMaximumHeight(400)
         
         # set actions

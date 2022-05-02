@@ -1,7 +1,7 @@
 import typing as t
 from PySide2 import QtWidgets, QtCore, QtGui
 
-from static.stylesheets import JSON_VIEWER_STYLESHEET
+from components.static.stylesheets import JSON_VIEWER_STYLESHEET
 
 class JsonViewer(QtWidgets.QTreeWidget):
     def __init__(
@@ -107,3 +107,14 @@ class JsonViewer(QtWidgets.QTreeWidget):
                 self.expandRecursively(self.indexFromItem(self._last_selected_item))
                 self._last_selected_item_expanded = True
         return super().mouseReleaseEvent(event)
+    
+    def add_value_to_root(self, name: str, json_value: dict):
+        self._new_item(self.invisibleRootItem(), name, json_value)
+    
+    def hide_root_child_at(self, idx: int):
+        child = self.invisibleRootItem().child(idx)
+        child.setHidden(True)
+    
+    def show_root_child_at(self, idx: int):
+        child = self.invisibleRootItem().child(idx)
+        child.setHidden(False)

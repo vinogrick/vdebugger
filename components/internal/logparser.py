@@ -1,5 +1,6 @@
 import typing as t
-from util import Event, Test
+
+from components.internal.util import Event, Test
 
 # TODO: separate tests by files
 # add analisable info (msg sizes etc)
