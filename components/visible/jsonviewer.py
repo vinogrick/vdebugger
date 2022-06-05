@@ -118,3 +118,6 @@ class JsonViewer(QtWidgets.QTreeWidget):
     def show_root_child_at(self, idx: int):
         child = self.invisibleRootItem().child(idx)
         child.setHidden(False)
+    
+    def remove_root_child(self, idx: int):
+        self.invisibleRootItem().removeChild(self.invisibleRootItem().child(idx))

@@ -154,14 +154,14 @@ class DisplayedNode(QtWidgets.QGraphicsItemGroup):
     def add_received_msg(self, msg: dict):
         self._info_viewer.add_received_msg(msg)
 
-    def pop_received_msg(self):
-        raise NotImplementedError()
-
     def add_sent_msg(self, msg: dict):
         self._info_viewer.add_sent_msg(msg)
     
-    def pop_sent_msg(self):
-        raise NotImplementedError()
+    def add_timer_fired(self, data: dict):
+        self._info_viewer.add_timer_fired(data)
+    
+    def pop_event(self):
+        return self._info_viewer.pop_event()
 
 
 class CustomGraphicsScene(QtWidgets.QGraphicsScene):

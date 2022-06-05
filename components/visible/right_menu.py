@@ -303,12 +303,34 @@ class DisplayedMsgRcv(DisplayedEvent):
         self._line = None
 
 
-class DisplayedMsgLocal(DisplayedEvent):
+class DisplayedMsgSendLocal(DisplayedEvent):
     def __init__(self, event: Event, display: CentralDisplay, parent: t.Optional[QtWidgets.QWidget] = None) -> None:
         DisplayedEvent.__init__(self, event, display, parent)
         caption = (
             f'{event.data["ts"]:.3f} | {event.data["dst"]} >>> local | {event.data["msg"]["type"]}'
-        )  # FIXME: class is used for rcv and send, but arrows are not the same (>>>)?
+        )
+        self._main_lbl.setText(caption)
+
+        self._msg_viewer = JsonViewer(event.data['msg']['data'], "Message data", self, expanded_h_ratio=3)
+        self._main_layout.addWidget(self._msg_viewer, *DISPLAYED_EVENT_GRID[1])
+
+        self._color: str = OnMouseEventColor.LOCAL_MESSAGE
+
+    def _show(self):
+        self._display.displayed_nodes[self._event.data['dst']].show_border()
+        self._display.displayed_nodes[self._event.data['dst']].show_local_user()
+
+    def _hide(self):
+        self._display.displayed_nodes[self._event.data['dst']].hide_border()
+        self._display.displayed_nodes[self._event.data['dst']].hide_local_user()
+
+
+class DisplayedMsgRcvLocal(DisplayedEvent):
+    def __init__(self, event: Event, display: CentralDisplay, parent: t.Optional[QtWidgets.QWidget] = None) -> None:
+        DisplayedEvent.__init__(self, event, display, parent)
+        caption = (
+            f'{event.data["ts"]:.3f} | {event.data["dst"]} <<< local | {event.data["msg"]["type"]}'
+        )
         self._main_lbl.setText(caption)
 
         self._msg_viewer = JsonViewer(event.data['msg']['data'], "Message data", self, expanded_h_ratio=3)
@@ -543,7 +565,7 @@ class DisplayedTimerFired(DisplayedEvent):
 
     def _hide(self):
         self._display.displayed_nodes[self._event.data['node']].hide_border()
-        self._display.displayed_nodes[self._event.data['node']].show_timer()
+        self._display.displayed_nodes[self._event.data['node']].hide_timer()
     
 
 class DisplayedNodeCrash(DisplayedEvent):
@@ -699,7 +721,7 @@ class RightMenu(QtWidgets.QWidget):
             self._last_shown_event.show()
 
         elif event.type == EventType.LOCAL_MESSAGE_SEND:
-            self._last_shown_event = DisplayedMsgLocal(event, self._display, self._events_wgt)
+            self._last_shown_event = DisplayedMsgSendLocal(event, self._display, self._events_wgt)
             self._event_stack.append(self._last_shown_event)
             self._events_layout.addWidget(
                 self._last_shown_event, alignment=QtCore.Qt.AlignTop
@@ -707,7 +729,7 @@ class RightMenu(QtWidgets.QWidget):
             self._last_shown_event.show()
             
         elif event.type == EventType.LOCAL_MESSAGE_RECEIVE:
-            self._last_shown_event = DisplayedMsgLocal(event, self._display, self._events_wgt)
+            self._last_shown_event = DisplayedMsgRcvLocal(event, self._display, self._events_wgt)
             self._event_stack.append(self._last_shown_event)
             self._events_layout.addWidget(
                 self._last_shown_event, alignment=QtCore.Qt.AlignTop
@@ -784,11 +806,11 @@ class RightMenu(QtWidgets.QWidget):
         # 1. process removing current event
         curr_displayed_event._hide()
         if curr_event.type == EventType.MESSAGE_SEND:
-            self._display.displayed_nodes[curr_event.data['src']].pop_sent_msg()
+            self._display.displayed_nodes[curr_event.data['src']].pop_event()
             curr_displayed_event.deleteLater()
 
         elif curr_event.type == EventType.MESSAGE_RECEIVE:
-            self._display.displayed_nodes[curr_event.data['dst']].pop_received_msg()
+            self._display.displayed_nodes[curr_event.data['dst']].pop_event()
             curr_displayed_event.deleteLater()
         
         # 2. process showing prev_event

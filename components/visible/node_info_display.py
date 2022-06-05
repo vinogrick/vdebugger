@@ -117,6 +117,12 @@ class NodeInfoDisplay(QtWidgets.QWidget):
         if self._filter_list.currentText() not in [NULL_EVENT_TYPE, EventType.TIMER_FIRED]:
             self._viewer.hide_root_child_at(len(self._events) - 1)
     
+    def pop_event(self):
+        event = self._events.pop()
+        event_idx = len(self._events)
+        self._viewer.remove_root_child(event_idx)
+        return event
+    
     def filter_value_changed(self):
         filter_type = self._filter_list.currentText()
         for idx in range(len(self._events)):
