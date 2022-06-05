@@ -1,0 +1,76 @@
+TEST_BEGIN:INFO-1 NORMAL
+NODE_IDS:sender:receiver
+{"type": "LocalMessageReceive","data": {"msg": {"type": "INFO-1","data": {"info": "distributed"}},"dst": "sender","ts": 0}}
+{"type": "MessageSend","data": {"msg": {"type": "INFO-1","data": {"info": "distributed", "id": 0}},"src": "sender","dst": "receiver","ts": 0}}
+{"type": "LocalMessageReceive","data": {"msg": {"type": "INFO-1","data": {"info": "systems"}},"dst": "sender","ts": 0}}
+{"type": "MessageSend","data": {"msg": {"type": "INFO-1","data": {"info": "systems", "id": 1}},"src": "sender","dst": "receiver","ts": 0}}
+{"type": "LocalMessageReceive","data": {"msg": {"type": "INFO-1","data": {"info": "need"}},"dst": "sender","ts": 0}}
+{"type": "MessageSend","data": {"msg": {"type": "INFO-1","data": {"info": "need", "id": 2}},"src": "sender","dst": "receiver","ts": 0}}
+{"type": "LocalMessageReceive","data": {"msg": {"type": "INFO-1","data": {"info": "some"}},"dst": "sender","ts": 0}}
+{"type": "MessageSend","data": {"msg": {"type": "INFO-1","data": {"info": "some", "id": 3}},"src": "sender","dst": "receiver","ts": 0}}
+{"type": "LocalMessageReceive","data": {"msg": {"type": "INFO-1","data": {"info": "guarantees"}},"dst": "sender","ts": 0}}
+{"type": "MessageSend","data": {"msg": {"type": "INFO-1","data": {"info": "guarantees", "id": 4}},"src": "sender","dst": "receiver","ts": 0}}
+{"type": "MessageReceive","data": {"msg": {"type": "INFO-1","data": {"info": "distributed", "id": 0}},"src": "sender","dst": "receiver","ts": 1}}
+{"type": "LocalMessageSend","data": {"msg": {"type": "INFO-1","data": {"info": "distributed"}},"dst": "receiver","ts": 1}}
+{"type": "MessageReceive","data": {"msg": {"type": "INFO-1","data": {"info": "systems", "id": 1}},"src": "sender","dst": "receiver","ts": 1}}
+{"type": "LocalMessageSend","data": {"msg": {"type": "INFO-1","data": {"info": "systems"}},"dst": "receiver","ts": 1}}
+{"type": "MessageReceive","data": {"msg": {"type": "INFO-1","data": {"info": "need", "id": 2}},"src": "sender","dst": "receiver","ts": 1}}
+{"type": "LocalMessageSend","data": {"msg": {"type": "INFO-1","data": {"info": "need"}},"dst": "receiver","ts": 1}}
+{"type": "MessageReceive","data": {"msg": {"type": "INFO-1","data": {"info": "some", "id": 3}},"src": "sender","dst": "receiver","ts": 1}}
+{"type": "LocalMessageSend","data": {"msg": {"type": "INFO-1","data": {"info": "some"}},"dst": "receiver","ts": 1}}
+{"type": "MessageReceive","data": {"msg": {"type": "INFO-1","data": {"info": "guarantees", "id": 4}},"src": "sender","dst": "receiver","ts": 1}}
+{"type": "LocalMessageSend","data": {"msg": {"type": "INFO-1","data": {"info": "guarantees"}},"dst": "receiver","ts": 1}}
+TEST_END:PASSED:
+TEST_BEGIN:INFO-2 NORMAL
+NODE_IDS:sender:receiver
+{"type": "LocalMessageReceive","data": {"msg": {"type": "INFO-2","data": {"info": "distributed"}},"dst": "sender","ts": 0}}
+{"type": "MessageSend","data": {"msg": {"type": "INFO-2","data": {"info": "distributed", "id": 0, "sender_id": "sender"}},"src": "sender","dst": "receiver","ts": 0}}
+{"type": "LocalMessageReceive","data": {"msg": {"type": "INFO-2","data": {"info": "systems"}},"dst": "sender","ts": 0}}
+{"type": "MessageSend","data": {"msg": {"type": "INFO-2","data": {"info": "systems", "id": 1, "sender_id": "sender"}},"src": "sender","dst": "receiver","ts": 0}}
+{"type": "LocalMessageReceive","data": {"msg": {"type": "INFO-2","data": {"info": "need"}},"dst": "sender","ts": 0}}
+{"type": "MessageSend","data": {"msg": {"type": "INFO-2","data": {"info": "need", "id": 2, "sender_id": "sender"}},"src": "sender","dst": "receiver","ts": 0}}
+{"type": "LocalMessageReceive","data": {"msg": {"type": "INFO-2","data": {"info": "some"}},"dst": "sender","ts": 0}}
+{"type": "MessageSend","data": {"msg": {"type": "INFO-2","data": {"info": "some", "id": 3, "sender_id": "sender"}},"src": "sender","dst": "receiver","ts": 0}}
+{"type": "LocalMessageReceive","data": {"msg": {"type": "INFO-2","data": {"info": "guarantees"}},"dst": "sender","ts": 0}}
+{"type": "MessageSend","data": {"msg": {"type": "INFO-2","data": {"info": "guarantees", "id": 4, "sender_id": "sender"}},"src": "sender","dst": "receiver","ts": 0}}
+{"type": "MessageReceive","data": {"msg": {"type": "INFO-2","data": {"info": "distributed", "id": 0, "sender_id": "sender"}},"src": "sender","dst": "receiver","ts": 1}}
+{"type": "MessageSend","data": {"msg": {"type": "INFO-2","data": {"info": "distributed", "id": 0}},"src": "receiver","dst": "sender","ts": 1}}
+{"type": "MessageReceive","data": {"msg": {"type": "INFO-2","data": {"info": "systems", "id": 1, "sender_id": "sender"}},"src": "sender","dst": "receiver","ts": 1}}
+{"type": "MessageSend","data": {"msg": {"type": "INFO-2","data": {"info": "systems", "id": 1}},"src": "receiver","dst": "sender","ts": 1}}
+{"type": "MessageReceive","data": {"msg": {"type": "INFO-2","data": {"info": "need", "id": 2, "sender_id": "sender"}},"src": "sender","dst": "receiver","ts": 1}}
+{"type": "MessageSend","data": {"msg": {"type": "INFO-2","data": {"info": "need", "id": 2}},"src": "receiver","dst": "sender","ts": 1}}
+{"type": "MessageReceive","data": {"msg": {"type": "INFO-2","data": {"info": "some", "id": 3, "sender_id": "sender"}},"src": "sender","dst": "receiver","ts": 1}}
+{"type": "MessageSend","data": {"msg": {"type": "INFO-2","data": {"info": "some", "id": 3}},"src": "receiver","dst": "sender","ts": 1}}
+{"type": "MessageReceive","data": {"msg": {"type": "INFO-2","data": {"info": "guarantees", "id": 4, "sender_id": "sender"}},"src": "sender","dst": "receiver","ts": 1}}
+{"type": "MessageSend","data": {"msg": {"type": "INFO-2","data": {"info": "guarantees", "id": 4}},"src": "receiver","dst": "sender","ts": 1}}
+{"type": "TimerFired","data": {"name": 0,"node": "sender","ts": 2}}
+{"type": "MessageSend","data": {"msg": {"type": "INFO-2","data": {"info": "distributed", "id": 0, "sender_id": "sender"}},"src": "sender","dst": "receiver","ts": 2}}
+{"type": "TimerFired","data": {"name": 1,"node": "sender","ts": 2}}
+{"type": "MessageSend","data": {"msg": {"type": "INFO-2","data": {"info": "systems", "id": 1, "sender_id": "sender"}},"src": "sender","dst": "receiver","ts": 2}}
+{"type": "TimerFired","data": {"name": 2,"node": "sender","ts": 2}}
+{"type": "MessageSend","data": {"msg": {"type": "INFO-2","data": {"info": "need", "id": 2, "sender_id": "sender"}},"src": "sender","dst": "receiver","ts": 2}}
+{"type": "TimerFired","data": {"name": 3,"node": "sender","ts": 2}}
+{"type": "MessageSend","data": {"msg": {"type": "INFO-2","data": {"info": "some", "id": 3, "sender_id": "sender"}},"src": "sender","dst": "receiver","ts": 2}}
+{"type": "TimerFired","data": {"name": 4,"node": "sender","ts": 2}}
+{"type": "MessageSend","data": {"msg": {"type": "INFO-2","data": {"info": "guarantees", "id": 4, "sender_id": "sender"}},"src": "sender","dst": "receiver","ts": 2}}
+{"type": "MessageReceive","data": {"msg": {"type": "INFO-2","data": {"info": "distributed", "id": 0}},"src": "receiver","dst": "sender","ts": 2}}
+{"type": "MessageReceive","data": {"msg": {"type": "INFO-2","data": {"info": "systems", "id": 1}},"src": "receiver","dst": "sender","ts": 2}}
+{"type": "MessageReceive","data": {"msg": {"type": "INFO-2","data": {"info": "need", "id": 2}},"src": "receiver","dst": "sender","ts": 2}}
+{"type": "MessageReceive","data": {"msg": {"type": "INFO-2","data": {"info": "some", "id": 3}},"src": "receiver","dst": "sender","ts": 2}}
+{"type": "MessageReceive","data": {"msg": {"type": "INFO-2","data": {"info": "guarantees", "id": 4}},"src": "receiver","dst": "sender","ts": 2}}
+{"type": "MessageReceive","data": {"msg": {"type": "INFO-2","data": {"info": "distributed", "id": 0, "sender_id": "sender"}},"src": "sender","dst": "receiver","ts": 3}}
+{"type": "MessageSend","data": {"msg": {"type": "INFO-2","data": {"info": "distributed", "id": 0}},"src": "receiver","dst": "sender","ts": 3}}
+{"type": "MessageReceive","data": {"msg": {"type": "INFO-2","data": {"info": "systems", "id": 1, "sender_id": "sender"}},"src": "sender","dst": "receiver","ts": 3}}
+{"type": "MessageSend","data": {"msg": {"type": "INFO-2","data": {"info": "systems", "id": 1}},"src": "receiver","dst": "sender","ts": 3}}
+{"type": "MessageReceive","data": {"msg": {"type": "INFO-2","data": {"info": "need", "id": 2, "sender_id": "sender"}},"src": "sender","dst": "receiver","ts": 3}}
+{"type": "MessageSend","data": {"msg": {"type": "INFO-2","data": {"info": "need", "id": 2}},"src": "receiver","dst": "sender","ts": 3}}
+{"type": "MessageReceive","data": {"msg": {"type": "INFO-2","data": {"info": "some", "id": 3, "sender_id": "sender"}},"src": "sender","dst": "receiver","ts": 3}}
+{"type": "MessageSend","data": {"msg": {"type": "INFO-2","data": {"info": "some", "id": 3}},"src": "receiver","dst": "sender","ts": 3}}
+{"type": "MessageReceive","data": {"msg": {"type": "INFO-2","data": {"info": "guarantees", "id": 4, "sender_id": "sender"}},"src": "sender","dst": "receiver","ts": 3}}
+{"type": "MessageSend","data": {"msg": {"type": "INFO-2","data": {"info": "guarantees", "id": 4}},"src": "receiver","dst": "sender","ts": 3}}
+{"type": "MessageReceive","data": {"msg": {"type": "INFO-2","data": {"info": "distributed", "id": 0}},"src": "receiver","dst": "sender","ts": 4}}
+{"type": "MessageReceive","data": {"msg": {"type": "INFO-2","data": {"info": "systems", "id": 1}},"src": "receiver","dst": "sender","ts": 4}}
+{"type": "MessageReceive","data": {"msg": {"type": "INFO-2","data": {"info": "need", "id": 2}},"src": "receiver","dst": "sender","ts": 4}}
+{"type": "MessageReceive","data": {"msg": {"type": "INFO-2","data": {"info": "some", "id": 3}},"src": "receiver","dst": "sender","ts": 4}}
+{"type": "MessageReceive","data": {"msg": {"type": "INFO-2","data": {"info": "guarantees", "id": 4}},"src": "receiver","dst": "sender","ts": 4}}
+TEST_END:FAILED:Message {"info": "need"} is not delivered
