@@ -18,6 +18,8 @@ DISPLAYED_EVENT_GRID = (
     (0, 1, 3, 3)
 )
 
+NULL_EVENT_TYPE = 'None'
+
 
 class DisplayedEvent(QtWidgets.QWidget):
     '''
@@ -40,6 +42,15 @@ class DisplayedEvent(QtWidgets.QWidget):
         self._select_counter = 0
         self._is_pinned = False  # == selected by left click on it
         self._color = None  # TODO: add autodetect
+    
+    def get_underlying_event(self):
+        return self._event
+    
+    def hide_widget(self):
+        super().hide()
+    
+    def show_widget(self):
+        super().show()
     
     def show(self):
         if self._show_counter == 0:
@@ -665,6 +676,25 @@ class RightMenu(QtWidgets.QWidget):
         QtWidgets.QWidget.__init__(self, parent)
         self._settings_editor = settings_editor
         self._main_layout = QtWidgets.QVBoxLayout(self)
+
+        # filter list
+        self._event_filter = QtWidgets.QWidget(self)
+        self._event_filter_layout = QtWidgets.QHBoxLayout(self._event_filter)
+        self._event_filter_lbl = QtWidgets.QLabel('Filter by: ', self._event_filter)
+        self._filter_list = QtWidgets.QComboBox(self._event_filter)
+        for type in [
+            NULL_EVENT_TYPE,
+            *list(EventType)
+        ]:
+            self._filter_list.addItem(type)
+        self._filter_list.currentTextChanged.connect(self.filter_value_changed)
+        self._current_filter_value = self._filter_list.currentText()
+        self._event_filter_layout.addWidget(self._event_filter_lbl)
+        self._event_filter_layout.addWidget(self._filter_list)
+        self._event_filter.setLayout(self._event_filter_layout)
+        self._main_layout.addWidget(self._event_filter)
+
+        # events scroll area
         self._events_scroll = QtWidgets.QScrollArea(self, widgetResizable=True)
         self._scroll_bar = self._events_scroll.verticalScrollBar()
         self._force_prevent_scrolling = True
@@ -677,6 +707,7 @@ class RightMenu(QtWidgets.QWidget):
         self._events_wgt.setLayout(self._events_layout)
         self._events_scroll.setWidget(self._events_wgt)
         self._main_layout.addWidget(self._events_scroll)
+        
         self.setLayout(self._main_layout)
 
         self._last_shown_event: DisplayedEvent = None
@@ -689,6 +720,8 @@ class RightMenu(QtWidgets.QWidget):
         self._event_stack: t.List[DisplayedEvent] = []
     
     def next_event(self, event: Event):
+        self._filter_list.setCurrentIndex(0)  # show all events for better experience
+
         self._force_prevent_scrolling = False
 
         if self._last_shown_event is not None:
@@ -796,6 +829,8 @@ class RightMenu(QtWidgets.QWidget):
             logger.warning(f'Not implemented handler for event type: {event.type}')
     
     def prev_event(self):
+        self._filter_list.setCurrentIndex(0)  # show all events for better experience
+        
         self._last_shown_event = None
 
         curr_displayed_event = self._event_stack.pop()
@@ -843,4 +878,14 @@ class RightMenu(QtWidgets.QWidget):
             item = layout.itemAt(i).widget()
             if item:
                 item._hide()  # force hide
-
+    
+    def filter_value_changed(self):
+        filter_type = self._filter_list.currentText()
+        if self._current_filter_value == filter_type:
+            return
+        self._current_filter_value = filter_type
+        for event in self._event_stack:
+            if event.get_underlying_event().type == filter_type or filter_type == NULL_EVENT_TYPE:
+                event.show_widget()
+            else:
+                event.hide_widget()

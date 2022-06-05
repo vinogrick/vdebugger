@@ -55,7 +55,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self._menu_bar = self.menuBar()
         self._menu_bar.setStyleSheet(MENU_BAR_STYLESHEET)
-        self._menu_bar.addAction('Main', self.show_main_page).setShortcut("Ctrl+T")
+        self._menu_bar.addAction('Main', self.show_main_page).setShortcut("Ctrl+M")
 
         self._tests_menus: t.Dict[str, QtWidgets.QMenu] = {
             'main': self._menu_bar.addMenu("Tests"),
