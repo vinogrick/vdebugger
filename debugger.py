@@ -238,6 +238,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._timer.start(self._settings_editor.get_settings().next_step_delay)
     
     def stop(self):
+        self._run_to_event_idx = None
         self._tests_menus['main'].setEnabled(True)
         self._button_set.prev_button.setEnabled(True)
         self._button_set.next_button.setEnabled(True)
