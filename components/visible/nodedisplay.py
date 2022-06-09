@@ -274,6 +274,8 @@ class CentralDisplay(QtWidgets.QGraphicsView):
         parent: t.Optional[QtWidgets.QWidget] = None, 
     ) -> None:
         QtWidgets.QGraphicsView.__init__(self, parent)
+
+        self._parent_window = parent
         
         self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
 
@@ -339,6 +341,9 @@ class CentralDisplay(QtWidgets.QGraphicsView):
     
     def set_node_with_shown_info(self, node_id: str):
         self._node_with_shown_info = node_id
+    
+    def run_to_event(self, event_idx: int):
+        self._parent_window.run_to_event(event_idx)
         
     ##### HELPERS ###
     def calc_node_positions(self, plot_rule: NodePlotRule = NodePlotRule.CIRCLE) -> t.List[t.Tuple[int, int]]:

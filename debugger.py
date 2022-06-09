@@ -154,6 +154,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self._back_timer = QtCore.QTimer()
         self._back_timer.timeout.connect(self.prev_step)
 
+        # specific event index to run to
+        self._run_to_event_idx: t.Optional[int] = None
+
         # add splitters to main layout
         self._vertical_splitter.addWidget(self._display_frame)
         self._vertical_splitter.addWidget(self._btn_and_msg_frame)
@@ -244,6 +247,18 @@ class MainWindow(QtWidgets.QMainWindow):
         elif self._back_timer.isActive():
             self._back_timer.stop()
     
+    def run_to_event(self, event_idx: int):
+        if self._timer.isActive() or self._back_timer.isActive():
+            self.stop()
+        if event_idx + 1 == self._curr_test_debug_data.next_event_idx:
+            return
+        if event_idx < self._curr_test_debug_data.next_event_idx - event_idx:
+            self._run_to_event_idx = event_idx
+            self.rerun()
+        else:
+            self._run_to_event_idx = event_idx
+            self.run_backwards()
+    
     def run_backwards(self):
         if not self.is_test_selected():
             self._message_box.warning('Test is not selected!')
@@ -267,6 +282,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.stop()
             self._message_box.info(f'Last event is reached (#{self._curr_test_debug_data.next_event_idx})')
             return
+        if self._run_to_event_idx is not None and event_idx == self._run_to_event_idx + 1:
+            self._run_to_event_idx = None
+            if self._timer.isActive():
+                self.stop()
+            return
         event = self._curr_test_debug_data.test.events[
             self._curr_test_debug_data.next_event_idx
         ]
@@ -281,10 +301,16 @@ class MainWindow(QtWidgets.QMainWindow):
         if not self.is_test_selected():
             self._message_box.warning('Test is not selected!')
             return
-        if self._curr_test_debug_data.next_event_idx == 0:
+        event_idx = self._curr_test_debug_data.next_event_idx
+        if event_idx == 0:
             if self._back_timer.isActive():
                 self.stop()
             self._message_box.info(f'First event reached')
+            return
+        if self._run_to_event_idx is not None and event_idx == self._run_to_event_idx + 1:
+            self._run_to_event_idx = None
+            if self._back_timer.isActive():
+                self.stop()
             return
         self._curr_test_debug_data.next_event_idx -= 1
         if self._curr_test_debug_data.next_event_idx > 0:

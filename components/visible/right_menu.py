@@ -96,12 +96,15 @@ class DisplayedEvent(QtWidgets.QWidget):
         return self._select_counter > 0
     
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-        if self._is_pinned:
-            self.deselect()
-            self._is_pinned = False
-        else:
-            self.select()
-            self._is_pinned = True
+        if event.button() == QtCore.Qt.MouseButton.LeftButton:
+            if self._is_pinned:
+                self.deselect()
+                self._is_pinned = False
+            else:
+                self.select()
+                self._is_pinned = True
+        elif event.button() == QtCore.Qt.MouseButton.RightButton:
+            self._display.run_to_event(self._event.idx)
         return super().mousePressEvent(event)
     
     def enterEvent(self, event: QtCore.QEvent) -> None:
