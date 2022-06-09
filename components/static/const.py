@@ -7,7 +7,7 @@ STATIC_PATH = f'{DEBUGGER_PATH}/components/static'
 PICS_PATH = f'{STATIC_PATH}/pics'
 SETTINGS_PATH = f'{STATIC_PATH}/settings.json'
 
-EVENT_STEP_TO_ANIM_STEP_RATIO = 5
+EVENT_STEP_TO_ANIM_STEP_RATIO = 10  # TODO: add this parameter to debsettings?
 ENVELOPE_STEPS_COUNT = EVENT_STEP_TO_ANIM_STEP_RATIO - 1
 
 MIN_STEP_DELAY_MS = 10
@@ -26,7 +26,6 @@ class EventType(str, Enum):
     LOCAL_MESSAGE_RECEIVE = 'LocalMessageReceive'
     MESSAGE_DROPPED = 'MessageDropped'
     MESSAGE_DISCARDED = 'MessageDiscarded'
-    TIMER_SET = 'TimerSet'
     TIMER_FIRED = 'TimerFired'
     NODE_RECOVERED = 'NodeRecovered'
     NODE_RESTARTED = 'NodeRestarted'
@@ -36,6 +35,9 @@ class EventType(str, Enum):
     LINK_ENABLED = 'LinkEnabled'
     LINK_DISABLED = 'LinkDisabled'
     NETWORK_PARTITION = 'NetworkPartition'
+
+    # additional type for internal process
+    TEST_END = "TestEnd"
 
 class MsgBoxColors(str, Enum):
     GREEN = 'green'
@@ -52,3 +54,8 @@ class OnMouseEventColor(str, Enum):
     NODE_RECOVERED = 'green'
     NODE_DISCONNECTED = 'yellow'
     NODE_CONNECTED = 'green'
+    NODE_RESTARTED = 'yellow'
+    LINK_DISABLED = 'red'
+    LINK_ENABLED = 'green'
+    NETWORK_PARTITION = 'red'
+    TEST_END = 'green'

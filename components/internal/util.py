@@ -1,6 +1,6 @@
 import json
 import typing as t
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 from PySide2 import QtWidgets
 
 from components.static.const import EventType
@@ -46,6 +46,10 @@ class Event:
         return self.to_json()
 
 
+def make_test_end_event(idx: int):
+    return Event(EventType.TEST_END, {}, idx)
+
+
 @dataclass
 class Test:
     class Status:
@@ -56,6 +60,7 @@ class Test:
     events: t.List[Event]
     status: Status = None
     err: t.Optional[str] = None
+    node_ids: t.Set[str] = field(default_factory=set)
 
     def to_json(self, indent=None):
         return json.dumps({
@@ -64,7 +69,8 @@ class Test:
                 {'type': event.type, 'data': event.data} for event in self.events
             ],
             'status': self.status,
-            'err': self.err
+            'err': self.err,
+            'node_ids': self.node_ids
         }, indent=indent)
 
     def __str__(self):
@@ -74,7 +80,6 @@ class Test:
 @dataclass
 class SessionData:
     tests: t.Dict[str, Test]
-    node_ids: t.Set[str]
 
 
 @dataclass
@@ -85,7 +90,6 @@ class TestDebugData:
 
 @dataclass
 class DebuggerSettings(Serializable):
-    # FIXME: when finished set proper values
     next_step_delay: int = 200
 
 

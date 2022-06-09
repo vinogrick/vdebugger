@@ -18,9 +18,12 @@ class CentralDisplay(QtWidgets.QGraphicsView):
 
 class DisplayedNode(QtWidgets.QGraphicsItemGroup):
     ICON_PATH = f"{STATIC_PATH}/pics/node.png"
+    ICON_GROUP_1 = f"{STATIC_PATH}/pics/node_group_1.png"
+    ICON_GROUP_2 = f"{STATIC_PATH}/pics/node_group_2.png"
     CROSS_PATH = f"{STATIC_PATH}/pics/cross.png"
     LOCAL_USER_PATH = f"{STATIC_PATH}/pics/localuser.png"
     TIMER_PATH = f"{STATIC_PATH}/pics/timer.png"
+    RESTART_PATH = f"{STATIC_PATH}/pics/restart.png"
 
     def __init__(self, node_id: str, size: t.Tuple[int, int], display: CentralDisplay, parent: t.Optional[QtWidgets.QGraphicsItem] = None):
         QtWidgets.QGraphicsItemGroup.__init__(self, parent)
@@ -28,11 +31,14 @@ class DisplayedNode(QtWidgets.QGraphicsItemGroup):
         self._node_size = size
         self._display = display
         
-        self._node = QtWidgets.QGraphicsPixmapItem(QtGui.QPixmap(self.ICON_PATH).scaled(size[0], size[1]))
+        self._node_pixmap = QtGui.QPixmap(self.ICON_PATH).scaled(size[0], size[1])
+        self._node_group_1_pixmap = QtGui.QPixmap(self.ICON_GROUP_1).scaled(size[0], size[1])
+        self._node_group_2_pixmap = QtGui.QPixmap(self.ICON_GROUP_2).scaled(size[0], size[1])
+        self._node = QtWidgets.QGraphicsPixmapItem(self._node_pixmap)
         self.addToGroup(self._node)
 
         self._border = display.scene().addRect(
-            0, 0, size[0], size[1], QtGui.QPen(QtGui.QColor(OnMouseEventColor.LOCAL_MESSAGE), 3)
+            0, 0, size[0], size[1], QtGui.QPen(QtGui.QColor(OnMouseEventColor.LOCAL_MESSAGE), 4)
         )
         self._border.hide()
         self.addToGroup(self._border)
@@ -62,6 +68,13 @@ class DisplayedNode(QtWidgets.QGraphicsItemGroup):
         self._timer.setPos(size[0], -pixmap.height())
         self._timer.hide()
         self.addToGroup(self._timer)
+
+        pixmap = QtGui.QPixmap(self.RESTART_PATH).scaledToHeight(self._local_user_size[1])
+        self.restart_size = (pixmap.width(), pixmap.height())
+        self._restart_icon = QtWidgets.QGraphicsPixmapItem(pixmap)
+        self._restart_icon.setPos(size[0], -pixmap.height())
+        self._restart_icon.hide()
+        self.addToGroup(self._restart_icon)
         
         self._info_viewer = NodeInfoDisplay(self._id, self._display)
 
@@ -73,9 +86,12 @@ class DisplayedNode(QtWidgets.QGraphicsItemGroup):
         self._local_user_show_counter = 0  # same as border counter for local user
         self._cross_show_counter = 0
         self._timer_show_counter = 0
+        self._restart_icon_show_counter = 0
+        self._disconnect_show_counter = 0
+        self._partition_show_counter = 0
         
     def update_conn_counter(self, val: int):
-        assert val in [-1, 1]  # TODO: remove this?
+        assert val in [-1, 1]
         was_zero = (self._connections_counter == 0)
         self._connections_counter += val
         if self._connections_counter < 0:
@@ -139,6 +155,48 @@ class DisplayedNode(QtWidgets.QGraphicsItemGroup):
         if self._timer_show_counter == 0:
             self._timer.hide()
     
+    def show_restart_icon(self):
+        if self._restart_icon_show_counter == 0:
+            self._restart_icon.show()
+        self._restart_icon_show_counter += 1
+
+    def hide_restart_icon(self):
+        self._restart_icon_show_counter = (
+            0 if self._restart_icon_show_counter == 0
+            else self._restart_icon_show_counter - 1
+        )
+        if self._restart_icon_show_counter == 0:
+            self._restart_icon.hide()
+    
+    def show_disconnect(self):
+        if self._disconnect_show_counter == 0:
+            self.setOpacity(0.3)
+        self._disconnect_show_counter += 1
+    
+    def hide_disconnect(self):
+        self._disconnect_show_counter = (
+            0 if self._disconnect_show_counter == 0
+            else self._disconnect_show_counter - 1
+        )
+        if self._disconnect_show_counter == 0:
+            self.setOpacity(1)
+    
+    def show_partition(self, group: int):
+        if self._partition_show_counter == 0:
+            if group == 1:
+                self._node.setPixmap(self._node_group_1_pixmap)
+            else:
+                self._node.setPixmap(self._node_group_2_pixmap)
+        self._partition_show_counter += 1
+
+    def hide_partition(self):
+        self._partition_show_counter = (
+            0 if self._partition_show_counter == 0
+            else self._partition_show_counter - 1
+        )
+        if self._partition_show_counter == 0:
+            self._node.setPixmap(self._node_pixmap)
+    
     def show_info(self):
         self._display.hide_shown_node_info()
         self._display.set_node_with_shown_info(self._id)
@@ -159,6 +217,36 @@ class DisplayedNode(QtWidgets.QGraphicsItemGroup):
     
     def add_timer_fired(self, data: dict):
         self._info_viewer.add_timer_fired(data)
+    
+    def add_local_sent_msg(self, data: dict):
+        self._info_viewer.add_local_sent_msg(data)
+    
+    def add_local_rcv_msg(self, data: dict):
+        self._info_viewer.add_local_rcv_msg(data)
+
+    def add_node_recovered(self, data: dict):
+        self._info_viewer.add_node_recovered(data)
+    
+    def add_node_crashed(self, data: dict):
+        self._info_viewer.add_node_crashed(data)
+    
+    def add_node_restarted(self, data: dict):
+        self._info_viewer.add_node_restarted(data)
+    
+    def add_node_disconnected(self, data: dict):
+        self._info_viewer.add_node_disconnected(data)
+
+    def add_node_connected(self, data: dict):
+        self._info_viewer.add_node_connected(data)
+    
+    def add_link_disabled(self, data: dict):
+        self._info_viewer.add_link_disabled(data)
+    
+    def add_link_enabled(self, data: dict):
+        self._info_viewer.add_link_enabled(data)
+    
+    def add_network_partition(self, data: dict):
+        self._info_viewer.add_network_partition(data)
     
     def pop_event(self):
         return self._info_viewer.pop_event()
@@ -182,8 +270,7 @@ class CustomGraphicsScene(QtWidgets.QGraphicsScene):
 
 class CentralDisplay(QtWidgets.QGraphicsView):
     def __init__(
-        self, 
-        node_ids: t.Set[str],
+        self,
         parent: t.Optional[QtWidgets.QWidget] = None, 
     ) -> None:
         QtWidgets.QGraphicsView.__init__(self, parent)
@@ -191,13 +278,12 @@ class CentralDisplay(QtWidgets.QGraphicsView):
         self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
 
         self._scene = CustomGraphicsScene()
-        # rect = self.contentsRect()
         self._scene.setParent(self)
         # self._scene.setBackgroundBrush(QtCore.Qt.green)
         self.setScene(self._scene)
         self.setSceneRect(-1000, -1000, 2000, 2000)
         
-        self._node_ids = node_ids
+        self._node_ids: t.Set[str] = None
         self.displayed_nodes: t.Dict[str, DisplayedNode] = {}
         self._node_icon_size: t.Optional[t.Tuple[int, int]] = None
         self._node_with_shown_info: t.Optional[str] = None
@@ -207,11 +293,13 @@ class CentralDisplay(QtWidgets.QGraphicsView):
         self.hide_shown_node_info()
         self._scene.clear()
         self.displayed_nodes.clear()
+    
+    def set_node_ids(self, node_ids: t.Set[str]):
+        self._node_ids = node_ids
 
     def on_startup(self):
         self.clear()
         self.plot_nodes(self._node_ids)
-        # TODO: center on nodes
 
     def plot_nodes(self, node_ids: t.Set[str], plot_rule: NodePlotRule = NodePlotRule.CIRCLE):
         points = self.calc_node_positions(plot_rule)
@@ -282,7 +370,6 @@ class CentralDisplay(QtWidgets.QGraphicsView):
         if plot_rule == NodePlotRule.COLUMN:
             raise NotImplementedError()
     
-    # TODO: add @attribute
     def get_node_icon_size(self):
         if self._node_icon_size is None:
             pixmap = QtGui.QPixmap(DisplayedNode.ICON_PATH)

@@ -81,7 +81,6 @@ class StartupPage(QtWidgets.QWidget):
             self._tests_layout.addWidget(tests_wgt)
         self._tests_area.setLayout(self._tests_layout)
 
-        # TODO: splitter?)
         self._main_layout.addWidget(self._chartview, 2)
         self._main_layout.addWidget(self._tests_area, 1)
         self.setLayout(self._main_layout)

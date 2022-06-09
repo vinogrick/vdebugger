@@ -1,5 +1,5 @@
 import argparse
-import sys
+import os.path as path
 import typing as t
 
 from PySide2 import QtCore, QtWidgets, QtGui
@@ -8,7 +8,7 @@ from components.visible.button_set import ButtonSet
 from components.visible.debsettings import SettingsEditor
 from components.visible.messagebox import MessageBox
 from components.visible.nodedisplay import CentralDisplay
-from components.visible.right_menu import RightMenu
+from components.visible.right_menu import EventMenu
 from components.visible.startuppage import StartupPage
 
 from components.internal.internal_logger import getLogger
@@ -17,9 +17,7 @@ from components.internal.util import Test, SessionData, TestDebugData, FramedGro
 
 from components.static.stylesheets import MENU_BAR_STYLESHEET
 
-# TODO: enable running from file? (for docker users)
-# Add error dialog?
-# add clear button
+# TODO:
 # add run backwards
 
 logger = getLogger('debugger')
@@ -28,16 +26,16 @@ class VDebugger:  # remove class?
     def __init__(self) -> None:
         self._session_data: SessionData = None
 
-    def main(self, logfile_path: str, start_test_name: t.Optional[str]):
+    def main(self, logfile_path: str):
         parser = LogParser()
         parser.parse_log_file(logfile_path)
-        self._session_data = SessionData(parser.tests, parser.node_ids)
-        self.start_gui(start_test_name)
+        self._session_data = SessionData(parser.tests)
+        self.start_gui()
     
     ############ GUI ############
-    def start_gui(self, start_test_name: t.Optional[str]):
+    def start_gui(self):
         app = QtWidgets.QApplication([])
-        main_window = MainWindow(self._session_data, start_test_name)
+        main_window = MainWindow(self._session_data)
         screen_size = app.primaryScreen().size()
         main_window.resize(screen_size.width() // 2, screen_size.height() // 2)
         main_window.showMaximized()
@@ -48,7 +46,7 @@ class VDebugger:  # remove class?
 
 
 class MainWindow(QtWidgets.QMainWindow):
-    def __init__(self, session_data: SessionData, start_test_name: t.Optional[str]) -> None:
+    def __init__(self, session_data: SessionData) -> None:
         QtWidgets.QMainWindow.__init__(self)
         self._session_data = session_data
         self._curr_test_debug_data: t.Optional[TestDebugData] = None
@@ -63,13 +61,12 @@ class MainWindow(QtWidgets.QMainWindow):
             Test.Status.FAILED: None
         }
         self._show_test_error_act = self._menu_bar.addAction('Show test error', self.show_test_error)
+        self._show_test_error_act.setShortcut("Ctrl+E")
         self._show_test_error_act.setVisible(False)
 
         # add submenus by status
         for status in [Test.Status.PASSED, Test.Status.FAILED]:
             self._tests_menus[status] = self._tests_menus['main'].addMenu(status)
-            self._tests_menus[status].setStyleSheet("menu-scrollable: 1;")  # FIXME: no scrollbar...
-            self._tests_menus[status].setMaximumHeight(400)
         
         # set actions
         self._tests_menu_callbacks = []
@@ -98,8 +95,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self._menu_bar.addAction('Settings', self.set_settings)
 
         self._message_box = MessageBox(self)
-        self._display = CentralDisplay(self._session_data.node_ids, self)
-        self._right_menu = RightMenu(self._display, self._settings_editor, self)
+        self._display = CentralDisplay(self)
+        self._event_menu = EventMenu(self._display, self._settings_editor, self)
         self._button_set = ButtonSet(self)
 
         self._left_frame = FramedGroup(
@@ -133,7 +130,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # events
         self._right_frame = FramedGroup(
             {
-                'right_menu': self._right_menu
+                'event_menu': self._event_menu
             }, 
             QtWidgets.QHBoxLayout,
             self
@@ -145,17 +142,22 @@ class MainWindow(QtWidgets.QMainWindow):
         self._button_set.next_button.clicked.connect(self.next_step)
         self._button_set.prev_button.clicked.connect(self.prev_step)
         self._button_set.rerun_button.clicked.connect(self.rerun)
-        self._button_set.run_button.clicked.connect(self.run)
-        self._button_set.stop_button.clicked.connect(self.stop)
+        self._button_set.clear_button.clicked.connect(self.clear)
+        self._button_set.run_back_button.clicked.connect(self.run_backwards)
+        self._button_set.run_or_stop_button.clicked.connect(self.run_or_stop)
         
         # timer for running
         self._timer = QtCore.QTimer()
         self._timer.timeout.connect(self.next_step)
 
+        # timer for backwards running
+        self._back_timer = QtCore.QTimer()
+        self._back_timer.timeout.connect(self.prev_step)
+
         # add splitters to main layout
         self._vertical_splitter.addWidget(self._display_frame)
         self._vertical_splitter.addWidget(self._btn_and_msg_frame)
-        self._vertical_splitter.setSizes([60000, 10000])  # hack to set ratio, TODO: set in app
+        self._vertical_splitter.setSizes([60000, 10000])  # hack to set ratio, TODO: add to debsettings
 
         self._horizontal_splitter.addWidget(self._left_frame)
         self._horizontal_splitter.addWidget(self._right_frame)
@@ -170,40 +172,48 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def on_startup(self):
         self.setWindowTitle("VDebugger")
-        # self.on_select_test_wrapper(start_test_name)()
-        # TODO: ONE TEST RUN IS BUGGING
     
     def on_select_test_wrapper(self, test_name: str):
         def on_select_test():
+            logger.info(f'Selected test: {test_name}')
             test = self._session_data.tests[test_name]
             self.show_test_page()
-            if test.err is not None:
-                self._show_test_error_act.setVisible(True)
-                # TODO: doesn't work...
-                # self.show_test_error()
-            else:
-                self._show_test_error_act.setVisible(False)
             if self._curr_test_debug_data and self._curr_test_debug_data.test.name == test_name:
                 # to start from where we were
                 return
-
+            
             self._curr_test_debug_data = TestDebugData(test)
             self.setWindowTitle(f"VDebugger | TEST: {test.name} | {test.status}")
 
-            self._message_box.clear()
+            if test.err is not None:
+                self._show_test_error_act.setVisible(True)
+                self.show_test_error()
+            else:
+                self._show_test_error_act.setVisible(False)
+                self._message_box.info(f'Selected test: {test_name}')
 
-            self._right_menu.clear_events()
+            self._event_menu.clear_events()
 
-            # self._display.showMaximized()
+            self._display.set_node_ids(test.node_ids)
             self._display.on_startup()
         return on_select_test
     
-    def rerun(self):
-        if self._timer.isActive():
+    def clear(self):
+        self._message_box.info(f'Clear events')
+        if self._timer.isActive() or self._back_timer.isActive():
             self.stop()
         self._curr_test_debug_data.next_event_idx = 0
-        self._right_menu.clear_events()
+        self._event_menu.clear_events()
         # self._display.on_startup()
+    
+    def rerun(self):
+        self.clear()
+        self.run_or_stop()
+
+    def run_or_stop(self):
+        if self._timer.isActive() or self._back_timer.isActive():
+            self.stop()
+            return
         self.run()
 
     def run(self):
@@ -214,8 +224,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._tests_menus['main'].setEnabled(False)
         self._button_set.prev_button.setEnabled(False)
         self._button_set.next_button.setEnabled(False)
-        self._button_set.run_button.setEnabled(False)
-        self._button_set.stop_button.setEnabled(True)
+        self._button_set.run_back_button.setEnabled(False)
 
         curr_idx = self._curr_test_debug_data.next_event_idx
         if curr_idx >= len(self._curr_test_debug_data.test.events) and curr_idx > 0:
@@ -224,14 +233,29 @@ class MainWindow(QtWidgets.QMainWindow):
         
         self.next_step()
         self._timer.start(self._settings_editor.get_settings().next_step_delay)
-
+    
     def stop(self):
         self._tests_menus['main'].setEnabled(True)
         self._button_set.prev_button.setEnabled(True)
         self._button_set.next_button.setEnabled(True)
-        self._button_set.run_button.setEnabled(True)
-        self._button_set.stop_button.setEnabled(False)
-        self._timer.stop()
+        self._button_set.run_back_button.setEnabled(True)
+        if self._timer.isActive():
+            self._timer.stop()
+        elif self._back_timer.isActive():
+            self._back_timer.stop()
+    
+    def run_backwards(self):
+        if not self.is_test_selected():
+            self._message_box.warning('Test is not selected!')
+            return
+        # disable buttons
+        self._tests_menus['main'].setEnabled(False)
+        self._button_set.prev_button.setEnabled(False)
+        self._button_set.next_button.setEnabled(False)
+        self._button_set.run_back_button.setEnabled(False)
+        
+        self.prev_step()
+        self._back_timer.start(self._settings_editor.get_settings().next_step_delay)
     
     def next_step(self):
         if not self.is_test_selected():
@@ -239,10 +263,8 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         event_idx = self._curr_test_debug_data.next_event_idx
         if event_idx >= len(self._curr_test_debug_data.test.events):
-            # TODO: disable next button?
             if self._timer.isActive():
                 self.stop()
-            self._right_menu.next_event(None)  # send None as event to estimate finish
             self._message_box.info(f'Last event is reached (#{self._curr_test_debug_data.next_event_idx})')
             return
         event = self._curr_test_debug_data.test.events[
@@ -253,17 +275,24 @@ class MainWindow(QtWidgets.QMainWindow):
             f'{len(self._curr_test_debug_data.test.events)}'
         )
         self._curr_test_debug_data.next_event_idx += 1
-        self._right_menu.next_event(event)
+        self._event_menu.next_event(event)
 
     def prev_step(self):
         if not self.is_test_selected():
             self._message_box.warning('Test is not selected!')
             return
         if self._curr_test_debug_data.next_event_idx == 0:
-            # stop backwards timer
+            if self._back_timer.isActive():
+                self.stop()
+            self._message_box.info(f'First event reached')
             return
         self._curr_test_debug_data.next_event_idx -= 1
-        self._right_menu.prev_event()
+        if self._curr_test_debug_data.next_event_idx > 0:
+            self._message_box.info(
+                f'Event: #{self._curr_test_debug_data.next_event_idx}/'
+                f'{len(self._curr_test_debug_data.test.events)}'
+            )
+        self._event_menu.prev_event()
 
     def is_test_selected(self):
         return self._curr_test_debug_data is not None
@@ -283,26 +312,7 @@ class MainWindow(QtWidgets.QMainWindow):
     
     def set_settings(self):
         self._settings_editor.edit()
-    
-    # def keyPressEvent(self, event: QtGui.QKeyEvent) -> None:
-        # TODO: doesn't work if focused on jsonviewer...
-        # if event.key() in [QtCore.Qt.Key_Space, QtCore.Qt.Key_S]:
-        #     if self._timer.isActive():
-        #         self.stop()
-        #     else:
-        #         self.run()
-        # return super().keyPressEvent(event)
 
-
-# TODO: would be great implement this (mb in dslib through rust)
-class UserDebugger:
-    def __init__(self) -> None:
-        pass
-
-user_debugger = UserDebugger()
-
-def get_debugger() -> UserDebugger:
-    return user_debugger
 
 if __name__ == '__main__':
     logger.info('Start application')
@@ -313,10 +323,8 @@ if __name__ == '__main__':
         dest='logfile_path', default='events.log',
         type=str, help='path to file with logs'
     )
-    parser.add_argument(
-        '-t', '--test', 
-        dest='start_test_name', default=None, 
-        type=str, help='test to start immediately'
-    )
     args = parser.parse_args()
-    vdeb.main(args.logfile_path, args.start_test_name)
+    if not path.isfile(args.logfile_path):
+        logger.error(f'Unknown path to logfile: {args.logfile_path}')
+    else:
+        vdeb.main(args.logfile_path)

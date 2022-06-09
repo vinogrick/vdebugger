@@ -20,7 +20,6 @@ class SettingsEditor(QtWidgets.QWidget):
         
         self._slider_box = QtWidgets.QGroupBox(self)
         self._slider_layout = QtWidgets.QVBoxLayout(self._slider_box)
-        # TODO: add typing value in
         self._nsd_slider_lbl = QtWidgets.QLabel(f'Next step delay: {self._settings.next_step_delay}', self)
         self._next_step_delay_slider = QtWidgets.QSlider(QtCore.Qt.Horizontal)
         self._next_step_delay_slider.setMinimum(MIN_STEP_DELAY_MS)
@@ -72,5 +71,5 @@ class SettingsEditor(QtWidgets.QWidget):
     def reset_settings(self):
         self._settings = DebuggerSettings()
         with open(SETTINGS_PATH, 'wt') as settings_file:
-            json.dump(self._settings.as_dict(), settings_file, indent=2)
+            json.dump(self._settings.serialize(), settings_file, indent=2)
         self._next_step_delay_slider.setValue(self._settings.next_step_delay)
